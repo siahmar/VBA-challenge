@@ -1,0 +1,179 @@
+
+Sub CalculateQuarterlyStockData()
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets("Q1")
+    
+    For Each ws In ThisWorkbook.Worksheets 'Loops through all worksheets in the workbook
+    
+    ' Label New Columns
+
+    ws.Range("I1").Value = "Ticker"
+    ws.Range("J1").Value = "Quaterly Change"
+    ws.Range("K1").Value = "Percent Chnage"
+    ws.Range("L1").Value = "Total Stock Volume"
+    
+    Dim lastRow As Long
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row 'sets last row
+        
+    Dim ticker As String
+    Dim openPrice As Double
+    Dim closePrice As Double
+    
+    Dim startRow As Long
+    Dim endRow As Long
+    Dim quatChange As Double
+    
+    Dim tickers() As String
+    Dim openPrices() As Double
+    Dim closePrices() As Double
+
+    Dim tickerCount As Long
+    tickerCount = 0
+
+    Dim i As Long
+    Dim j As Long
+        
+
+    For i = 2 To lastRow 'setting location of open and close price for a given ticker
+        ticker = ws.Cells(i, 1).Value
+        openPrice = ws.Cells(i, 3).Value
+        closePrice = ws.Cells(i, 6).Value
+                
+        For j = 1 To tickerCount 'nested loop to update closing price
+            If tickers(j) = ticker Then
+                closePrices(j) = closePrice
+                Exit For
+            End If
+        Next j
+
+'This code was obtained with the help of ChatGPT
+
+        If j > tickerCount Then
+            tickerCount = tickerCount + 1
+            ReDim Preserve tickers(1 To tickerCount)
+            ReDim Preserve openPrices(1 To tickerCount)
+            ReDim Preserve closePrices(1 To tickerCount)
+            tickers(tickerCount) = ticker
+            openPrices(tickerCount) = openPrice
+            closePrices(tickerCount) = closePrice
+        
+        End If
+    Next i
+
+    ' Output the results
+    Dim resultRow As Long
+    resultRow = 2
+
+    
+    For j = 1 To tickerCount
+        ws.Cells(resultRow, 9).Value = tickers(j)
+        ws.Cells(resultRow, 10).Value = closePrices(j) - openPrices(j)
+        ws.Cells(resultRow, 11).Value = ((closePrices(j) - openPrices(j)) / closePrices(j))
+    
+        resultRow = resultRow + 1
+    Next j
+
+Dim Summary_Ticker As Integer
+    Summary_Ticker = 2
+Dim volume As Double
+    volume = 0
+
+For i = 2 To lastRow
+    
+        If ws.Cells(i + 1, 1).Value <> ws.Cells(i, 1).Value Then 'checks to see if next ticker is the same as previous, if not
+        
+            ticker = ws.Cells(i, 1).Value  ' sets the ticker name
+            
+            volume = volume + ws.Cells(i, 7).Value
+            ws.Range("L" & Summary_Ticker).Value = volume
+            
+             Summary_Ticker = Summary_Ticker + 1  'adds one to the ticker count
+
+volume = 0
+Else
+            
+            volume = volume + ws.Cells(i, 7).Value  'updates volume with matching ticker
+            
+           
+        End If
+        
+    Next i
+
+    'Comparison of max increase/decrease and max volume
+    
+    Dim maxIncrease As Double
+    Dim minIncrease As Double
+    Dim maxVolume As Double
+    Dim maxVTicker As String
+    Dim maxTicker As String
+    Dim minTicker As String
+    
+    'Location for inputs
+
+    maxIncrease = ws.Cells(2, "K").Value
+    minIncrease = ws.Cells(2, "K").Value
+    maxVolume = ws.Cells(2, "L").Value
+    maxVTicker = ws.Cells(2, "I").Value
+    maxTicker = ws.Cells(2, "I").Value
+    minTicker = ws.Cells(2, "I").Value
+
+    For i = 2 To lastRow
+        If ws.Cells(i, "K").Value > maxIncrease Then
+            maxIncrease = ws.Cells(i, "K").Value
+            maxTicker = ws.Cells(i, "I").Value
+        End If
+        
+        If ws.Cells(i, "K").Value < minIncrease Then
+            minIncrease = ws.Cells(i, "K").Value
+            minTicker = ws.Cells(i, "I").Value
+        End If
+    Next i
+    
+    For i = 2 To lastRow
+        If ws.Cells(i, "L").Value > maxVolume Then
+            maxVolume = ws.Cells(i, "L").Value
+            maxVTicker = ws.Cells(i, "I").Value
+        End If
+    Next i
+
+    ' Output Location
+    
+    ws.Cells(1, "P").Value = "Ticker"
+    ws.Cells(1, "Q").Value = "Value"
+    
+    ws.Cells(2, "O").Value = "Greatest % Increase"
+    ws.Cells(2, "Q").Value = maxIncrease
+    ws.Cells(2, "P").Value = maxTicker
+
+    ws.Cells(3, "O").Value = "Greatest % Decrease"
+    ws.Cells(3, "Q").Value = minIncrease
+    ws.Cells(3, "P").Value = minTicker
+
+    ws.Cells(4, "O").Value = "Greatest total volume"
+    ws.Cells(4, "Q").Value = maxVolume
+    ws.Cells(4, "P").Value = maxVTicker
+
+
+' Autofit column width
+    ws.Columns("A:R").AutoFit
+
+
+    Dim rng As Range
+    Set rng = ws.Columns("J:K")
+
+ ' Add a conditional format for positive values
+    With rng.FormatConditions.Add(Type:=xlCellValue, Operator:=xlGreater, Formula1:="0")
+        .Interior.Color = RGB(0, 255, 0) ' Green background
+    End With
+    
+    ' Add a conditional format for negative values
+    With rng.FormatConditions.Add(Type:=xlCellValue, Operator:=xlLess, Formula1:="0")
+        .Interior.Color = RGB(255, 0, 0) ' Red background
+    End With
+
+    Next ws
+    
+End Sub
+
+
+
